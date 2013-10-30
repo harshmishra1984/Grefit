@@ -1,0 +1,62 @@
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/security
+	http://www.springframework.org/schema/security/spring-security-3.0.3.xsd">
+	<beans:bean name="accountUserDetailsService" class="com.rimt.web.security.AccountUserDetailsService"/>
+	<beans:bean name="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder"/>
+    <beans:bean name="authenticationTrustResolver"
+            class="org.springframework.security.authentication.AuthenticationTrustResolverImpl"/>
+    <beans:bean name="currentAccountFilter" class="com.rimt.web.security.CurrentAccountFilter"/>
+    <beans:bean name="authenticationFailureHandler"
+            class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+       	<!-- <beans:property name="useForward" value="true"/> -->
+        <beans:property name="defaultFailureUrl" value="/login?login_error=t"/>
+    </beans:bean>
+    
+    <beans:bean id="authenticationSuccessHandler" class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
+    <!-- After login, return to the last visited page -->
+    	<beans:property name="useReferer" value="true" />
+	</beans:bean>
+	
+	<beans:bean id="authenticationSuccessHandlerWithoutReferer" class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
+    <!-- After login, stay to the same page -->
+    	<beans:property name="useReferer" value="false" />
+    	
+	</beans:bean>
+    
+
+    <http auto-config="true" access-denied-page="/error/access-denied">
+        <intercept-url pattern="/login*" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/forgot*" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/js/*" filters="none"/>
+        <intercept-url pattern="/css/*" filters="none"/>
+        <intercept-url pattern="/forgot/*" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/fonts/*" filters="none"/>
+        <intercept-url pattern="/images/*" filters="none"/>
+        <intercept-url pattern="/signup" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/test*" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/**" access="ROLE_SUPERUSER"/>
+        <form-login login-page="/login" authentication-failure-handler-ref="authenticationFailureHandler"   always-use-default-target="true"  default-target-url="/home"
+                    />
+                    <!-- login-processing-url="/home" -->
+        <logout logout-url="/logout" logout-success-url="/login" invalidate-session="true"/>
+     <!--    <custom-filter ref="aclPermissionFilter" before="LAST"/> -->
+         <custom-filter ref="currentAccountFilter" position="LAST"/>
+        <remember-me/>
+    </http>
+
+    <authentication-manager alias="authenticationManager">
+        <authentication-provider user-service-ref="accountUserDetailsService">
+        <!--   <password-encoder hash="sha"/>  -->
+          <password-encoder hash="plaintext"/>
+        </authentication-provider>
+    </authentication-manager>
+    
+   	<!-- <global-method-security>
+        <protect-pointcut expression="execution(* dao.*.*(..))" access="ROLE_ADMIN"/>
+    </global-method-security> -->
+
+
+</beans:beans>
